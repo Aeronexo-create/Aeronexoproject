@@ -1,0 +1,8 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import FlightExplorer from "../components/FlightExplorer.astro";
+import Footer from "../components/Footer.astro";
+import AboutDialog from "../components/AboutDialog.astro";
+---
+<Layout><Header /><FlightExplorer /><Footer /><AboutDialog /><Fragment slot="scripts"><script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script is:inline src="/app.js"></script></Fragment></Layout>

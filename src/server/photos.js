@@ -1,0 +1,9 @@
+const regPattern=/^[A-Z0-9-]{2,12}$/;
+const hexPattern=/^[A-F0-9]{6}$/;
+export async function handlePhotos(request, cache=globalThis.caches?.default){
+  const url=new URL(request.url);const registration=(url.searchParams.get('registration')||'').trim().toUpperCase();const hex=(url.searchParams.get('hex')||'').trim().toUpperCase();
+  if(request.method!=='GET')return Response.json({photos:[],error:'Método no permitido.'},{status:405,headers:{Allow:'GET'}});
+  if((!registration||!regPattern.test(registration))&&(!hex||!hexPattern.test(hex)))return Response.json({photos:[],error:'Se necesita una matrícula o código ICAO válido.'},{status:400});
+  const kind=registration&&regPattern.test(registration)?'reg':'hex';const value=kind==='reg'?registration:hex;const endpoint=`https://api.planespotters.net/pub/photos/${kind}/${encodeURIComponent(value)}`;
+  try{const key=new Request(endpoint);let response=cache?await cache.match(key):null;if(response)return response;const upstream=await fetch(endpoint,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(12000)});if(!upstream.ok)return Response.json({photos:[],error:'No se pudo consultar la galería ahora.'},{status:502});const payload=await upstream.json();const photos=(Array.isArray(payload.photos)?payload.photos:[]).map(photo=>({thumbnail:typeof photo.thumbnail_large==='string'?photo.thumbnail_large:photo.thumbnail_large?.src||photo.thumbnail?.src||'',page:photo.link||'',photographer:photo.photographer||photo.photographer_name||'Fotógrafo de la comunidad',date:photo.uploaded||photo.date||'',registration:photo.registration||value})).filter(photo=>/^https:\/\//i.test(photo.thumbnail)&&/^https:\/\//i.test(photo.page));response=Response.json({photos},{headers:{'Cache-Control':'public, max-age=21600'}});if(cache)await cache.put(key,response.clone());return response}catch{return Response.json({photos:[],error:'Galería no disponible temporalmente.'},{status:503})}
+}

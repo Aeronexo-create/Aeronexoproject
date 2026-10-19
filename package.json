@@ -1,0 +1,15 @@
+{
+  "name": "aeronexo-astro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0",
+    "start": "astro dev --host 0.0.0.0",
+    "build": "astro build",
+    "preview": "astro preview --host 0.0.0.0",
+    "build:site": "astro build && node scripts/package-sites.mjs"
+  },
+  "dependencies": { "astro": "7.3.8" }
+}

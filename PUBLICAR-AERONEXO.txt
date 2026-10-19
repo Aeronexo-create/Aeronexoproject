@@ -1,0 +1,21 @@
+AERONEXO — PROYECTO COMPLETO PARA PUBLICAR
+
+El proyecto ya incluye las conexiones de datos. No tienes que crear claves API:
+- Posiciones ADS-B en vivo mediante una función de Cloudflare Pages que consulta ADSB.lol.
+- Fotos por matrícula o código ICAO mediante Planespotters.
+- Mapa Leaflet con cartografía de OpenStreetMap/CARTO.
+- Historial observado en este navegador, filtros, favoritos y modo demo.
+
+PARA PROBARLO EN STACKBLITZ
+1. Importa este ZIP como proyecto Astro.
+2. Abre la terminal y ejecuta: npm install
+3. Ejecuta: npm run dev
+
+PARA PUBLICAR EN CLOUDFLARE PAGES
+- Framework: Astro
+- Comando de build: npm run build
+- Directorio de salida: dist
+- Mantén la carpeta functions en la raíz del proyecto. Ahí está la conexión /api/aircraft y /api/photos.
+
+IMPORTANTE
+Sube/importa el proyecto completo, no solamente la carpeta dist. Las funciones de Cloudflare son necesarias para consultar los datos sin exponer claves ni depender de CORS del navegador. El proveedor ADSB.lol puede tener límites de cobertura y disponibilidad; las posiciones dependen de los receptores ADS-B que estén recibiendo señal. El uso de sus datos requiere respetar la licencia ODbL y contactar al proveedor para uso de producción.
