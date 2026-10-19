@@ -1,6 +1,7 @@
 export async function onRequestGet(context) {
   const { request } = context;
   const url = new URL(request.url);
+
   const rawLat = url.searchParams.get("lat");
   const rawLon = url.searchParams.get("lon");
   const lat = Number(rawLat);
@@ -23,7 +24,7 @@ export async function onRequestGet(context) {
   }
 
   const upstreamUrl =
-  `https://opendata.adsb.fi/api/v3/lat/${lat.toFixed(2)}/lon/${lon.toFixed(2)}/dist/250`;
+    `https://api.adsb.lol/v2/point/${lat.toFixed(2)}/${lon.toFixed(2)}/250`;
 
   try {
     const cache = globalThis.caches?.default;
@@ -42,7 +43,7 @@ export async function onRequestGet(context) {
     if (!upstream.ok) {
       return Response.json(
         {
-          error: "ADSB One no entregó los datos.",
+          error: "ADSB.lol no entregó los datos.",
           detalle: `HTTP ${upstream.status}`,
         },
         { status: 502 }
@@ -53,7 +54,7 @@ export async function onRequestGet(context) {
 
     if (!Array.isArray(data.ac)) {
       return Response.json(
-        { error: "La respuesta de ADSB One no contiene aeronaves." },
+        { error: "La respuesta de ADSB.lol no contiene aeronaves." },
         { status: 502 }
       );
     }
@@ -70,7 +71,7 @@ export async function onRequestGet(context) {
   } catch (error) {
     return Response.json(
       {
-        error: "Cloudflare no pudo consultar ADSB One.",
+        error: "Cloudflare no pudo consultar ADSB.lol.",
         detalle: error?.message || String(error),
       },
       { status: 503 }
