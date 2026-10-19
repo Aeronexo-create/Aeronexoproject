@@ -1,4 +1,5 @@
-export async function onRequestGet({ request }) {
+export async function onRequestGet(context) {
+  const { request } = context;
   const url = new URL(request.url);
   const rawLat = url.searchParams.get("lat");
   const rawLon = url.searchParams.get("lon");
@@ -16,59 +17,63 @@ export async function onRequestGet({ request }) {
     lon > 180
   ) {
     return Response.json(
-      { error: "Coordenadas inválidas", ejemplo: "/api/aircraft?lat=18.736&lon=-70.163" },
+      { error: "Coordenadas inválidas." },
       { status: 400 }
     );
   }
 
-  const sourceUrl =
-    `https://api.adsb.lol/v2/point/${lat.toFixed(2)}/${lon.toFixed(2)}/250`;
+  const upstreamUrl =
+    `https://api.adsb.one/v2/point/${lat.toFixed(2)}/${lon.toFixed(2)}/250`;
 
-  let lastError = "La fuente no respondió.";
+  try {
+    const cache = globalThis.caches?.default;
+    const cacheKey = new Request(upstreamUrl);
 
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      const response = await fetch(sourceUrl, {
-        headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (!response.ok) {
-        lastError = `ADSB.lol respondió HTTP ${response.status}.`;
-        if (attempt === 1 && response.status >= 500) continue;
-
-        return Response.json(
-          { error: "ADSB.lol no entregó datos.", detalle: lastError },
-          { status: 502 }
-        );
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data.ac)) {
-        return Response.json(
-          { error: "La respuesta de ADSB.lol no contiene la lista de aeronaves." },
-          { status: 502 }
-        );
-      }
-
-      return Response.json(data, {
-        headers: {
-          "Cache-Control": "public, max-age=10",
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
-    } catch (error) {
-      lastError = error?.message || String(error);
+    if (cache) {
+      const cached = await cache.match(cacheKey);
+      if (cached) return cached;
     }
-  }
 
-  return Response.json(
-    {
-      error: "Cloudflare no pudo obtener los datos de vuelos.",
-      detalle: lastError,
-      coordenadas: { latitud: lat, longitud: lon },
-    },
-    { status: 503 }
-  );
+    const upstream = await fetch(upstreamUrl, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!upstream.ok) {
+      return Response.json(
+        {
+          error: "ADSB One no entregó los datos.",
+          detalle: `HTTP ${upstream.status}`,
+        },
+        { status: 502 }
+      );
+    }
+
+    const data = await upstream.json();
+
+    if (!Array.isArray(data.ac)) {
+      return Response.json(
+        { error: "La respuesta de ADSB One no contiene aeronaves." },
+        { status: 502 }
+      );
+    }
+
+    const response = Response.json(data, {
+      headers: { "Cache-Control": "public, max-age=15" },
+    });
+
+    if (cache && context.waitUntil) {
+      context.waitUntil(cache.put(cacheKey, response.clone()));
+    }
+
+    return response;
+  } catch (error) {
+    return Response.json(
+      {
+        error: "Cloudflare no pudo consultar ADSB One.",
+        detalle: error?.message || String(error),
+      },
+      { status: 503 }
+    );
+  }
 }
