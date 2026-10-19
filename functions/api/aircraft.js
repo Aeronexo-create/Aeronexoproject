@@ -23,7 +23,7 @@ export async function onRequestGet(context) {
   }
 
   const upstreamUrl =
-    `https://api.adsb.one/v2/point/${lat.toFixed(2)}/${lon.toFixed(2)}/250`;
+  `https://opendata.adsb.fi/api/v3/lat/${lat.toFixed(2)}/lon/${lon.toFixed(2)}/dist/250`;
 
   try {
     const cache = globalThis.caches?.default;
