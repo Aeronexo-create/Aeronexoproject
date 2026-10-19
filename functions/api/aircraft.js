@@ -36,7 +36,11 @@ export async function onRequestGet(context) {
     }
 
     const upstream = await fetch(upstreamUrl, {
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent":
+          "AeroNexo/1.0 (https://aeronexoproject.pages.dev; mailto:erbaseballacademy@gmail.com)",
+      },
       signal: AbortSignal.timeout(10000),
     });
 
