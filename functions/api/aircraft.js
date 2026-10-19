@@ -41,10 +41,12 @@ export async function onRequestGet(context) {
     });
 
     if (!upstream.ok) {
+      const detalle = await upstream.text();
+    
       return Response.json(
         {
-          error: "ADSB.lol no entregó los datos.",
-          detalle: `HTTP ${upstream.status}`,
+          error: "ADSB.lol rechazó la consulta.",
+          detalle: `HTTP ${upstream.status}: ${detalle.slice(0, 300)}`,
         },
         { status: 502 }
       );
